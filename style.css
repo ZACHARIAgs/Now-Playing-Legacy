@@ -6,8 +6,7 @@ html, body {
     overflow: hidden;
     background-color: black;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    overscroll-behavior: none; /* Prevent pull-to-refresh and overscroll glow */
-    touch-action: none; /* Disable all browser handling of gestures like pinch, zoom, and swipe-to-reload */
+    /* overscroll-behavior and touch-action removed for iOS 9 compatibility */
 }
 
 /* Background image rotation and blur */
@@ -169,6 +168,7 @@ html, body {
     justify-content: center;
     align-items: center;
     color: white;
+    display: flex; /* handled by JS mostly, but flex is safe in iOS 9 */
 }
 
 #login-button {
