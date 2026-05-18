@@ -5,6 +5,8 @@ A beautifully responsive, lightweight, and hardware-accelerated "Now Playing" we
 ## Just go to https://zachariags.github.io/Now-Playing-Legacy/
 https://zachariags.github.io/Now-Playing-Legacy/?import_token=AQA4qgpMUp3FwglSPEX6veehcGj-kZbEBSP80LWfsr7EqhAoxEa4WvZyDbuYJgLFETDe4FKuhK-7cg6h4xLJ3YS9Z1GiGQr45fi8uO8Nl9oauIyDDqpuhuxwZkUa1gb_nMA
 
+https://zachariags.github.io/Now-Playing-Legacy/?import_token=AQCCufGVK3jz3nE1yvI7FCr4AwtMZxExVy-m0ausXemlNkmHbITSA_lHUAbu9imYG-ciOMJ_lN4o3v8qDIWcXZIb_X8CVwJGzoSQxISRwKyxiUtj_WPx2bM0gvtzjNIhAKg
+
 This project was built to transform any unused screen into a cool music display. By running entirely in the browser using HTML, CSS, and Vanilla JavaScript with no backend required, it's incredibly portable. Whether you're displaying it on a secondary PC monitor, mounting an old iPad on the wall, or converting a dusty Kindle, this app is great. 
 
 ### Features
