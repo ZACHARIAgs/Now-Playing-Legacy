@@ -116,6 +116,18 @@ function generateRandomString(length) {
 
 function checkAuth() {
     var code = getQueryParam('code');
+    var importToken = getQueryParam('import_token');
+    var exportMode = getQueryParam('export');
+    
+    if (exportMode === 'true') {
+        localStorage.setItem('export_mode', 'true');
+    }
+    
+    if (importToken) {
+        localStorage.setItem('refresh_token', importToken);
+        localStorage.removeItem('access_token'); // Force refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
     
     var scopeVersion = localStorage.getItem('auth_scope_version');
     if (scopeVersion !== '2') {
@@ -125,6 +137,20 @@ function checkAuth() {
     }
     
     accessToken = localStorage.getItem('access_token');
+
+    // If we just imported a token, immediately exchange it
+    if (importToken && !code) {
+        loginOverlay.style.display = 'flex';
+        loginOverlay.innerHTML = "<h2>Logging in...</h2>";
+        refreshToken().then(function(success) {
+            if (success) {
+                window.location.reload();
+            } else {
+                alert("Import failed. Token may be invalid.");
+            }
+        });
+        return;
+    }
 
     if (code) {
         var codeVerifier = localStorage.getItem('code_verifier');
@@ -152,10 +178,20 @@ function checkAuth() {
                         localStorage.setItem('refresh_token', tokenData.refresh_token);
                     }
                     window.history.replaceState({}, document.title, window.location.pathname);
+                    
+                    if (localStorage.getItem('export_mode') === 'true') {
+                        showExportScreen();
+                        return;
+                    }
+                    
                     loginOverlay.style.display = 'none';
                     startPolling();
                 } else {
                     if (accessToken) {
+                        if (localStorage.getItem('export_mode') === 'true') {
+                            showExportScreen();
+                            return;
+                        }
                         loginOverlay.style.display = 'none';
                         startPolling();
                     } else {
@@ -169,12 +205,23 @@ function checkAuth() {
             });
     } else {
         if (accessToken) {
+            if (localStorage.getItem('export_mode') === 'true') {
+                showExportScreen();
+                return;
+            }
             loginOverlay.style.display = 'none';
             startPolling();
         } else {
             loginOverlay.style.display = 'flex';
         }
     }
+}
+
+function showExportScreen() {
+    loginOverlay.style.display = 'flex';
+    var rToken = localStorage.getItem('refresh_token');
+    var link = window.location.href.split('?')[0].split('#')[0] + "?import_token=" + encodeURIComponent(rToken);
+    loginOverlay.innerHTML = "<h2>Export Login</h2><p style='margin:20px; text-align:center;'>Open this link on your iPad to log in:</p><textarea style='width:80%; max-width:500px; height:100px; margin-bottom:20px; color:black; padding:10px; border-radius:8px; font-family:monospace;' readonly>" + link + "</textarea><a href='mailto:?subject=iPad Login Link&body=" + encodeURIComponent(link) + "' style='background:#1DB954; color:white; padding:15px 30px; border-radius:30px; text-decoration:none; font-weight:bold; font-size:18px;'>Email Link to iPad</a><button onclick='localStorage.removeItem(\"export_mode\"); window.location.reload();' style='margin-top:20px; background:none; border:none; color:#aaa; text-decoration:underline; font-size:16px; cursor:pointer;'>Return to normal mode</button>";
 }
 
 loginButton.addEventListener('click', function() {
