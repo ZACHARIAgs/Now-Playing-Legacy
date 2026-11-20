@@ -4,58 +4,72 @@ html, body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: black;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    /* overscroll-behavior and touch-action removed for iOS 9 compatibility */
+    background-color: #000000;
+    font-family: -apple-system, 'Helvetica Neue', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
 /* Background image rotation and blur */
 #background-container {
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 50%;
+    width: 140%;
+    height: 140%;
+    -webkit-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
-    width: 150vmax; /* large enough to cover the screen when rotating */
-    height: 150vmax;
     z-index: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    overflow: hidden;
 }
 
 #background-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    filter: blur(40px);
+    -webkit-filter: blur(28px);
+    filter: blur(28px);
+    -webkit-animation: rotate 60s linear infinite;
     animation: rotate 60s linear infinite;
-    opacity: 0.75; /* Brighter background */
-    will-change: transform;
-    transform: translateZ(0); /* Cache the blurred image on the GPU */
+    opacity: 0.72;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+}
+
+@-webkit-keyframes rotate {
+    from { -webkit-transform: rotate(0deg) translate3d(0, 0, 0); }
+    to   { -webkit-transform: rotate(360deg) translate3d(0, 0, 0); }
 }
 
 @keyframes rotate {
-    from { transform: rotate(0deg) translateZ(0); }
-    to { transform: rotate(360deg) translateZ(0); }
+    from { transform: rotate(0deg) translate3d(0, 0, 0); }
+    to   { transform: rotate(360deg) translate3d(0, 0, 0); }
 }
 
 /* Overlay to darken background */
 #overlay {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-color: rgba(0, 0, 0, 0.3);
     z-index: 2;
 }
 
 /* Main Content Layout */
 #content-container {
-    position: absolute;
+    position: fixed;
     z-index: 3;
+    display: -webkit-flex;
     display: flex;
+    -webkit-flex-direction: row;
+    flex-direction: row;
+    -webkit-align-items: center;
+    align-items: center;
     bottom: 30px;
     left: 30px;
     right: 30px;
-    align-items: center;
 }
 
 #album-art-border {
@@ -64,21 +78,30 @@ html, body {
     border-radius: 16px;
     overflow: hidden;
     background-color: rgba(0, 0, 0, 0.2);
+    -webkit-flex-shrink: 0;
     flex-shrink: 0;
+    /* Fix border-radius clipping on transformed children in Safari 9 */
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
 
 #album-art {
     width: 100%;
     height: 100%;
+    display: block;
     object-fit: cover;
 }
 
 #text-container {
     margin-left: 25px;
+    display: -webkit-flex;
     display: flex;
+    -webkit-flex-direction: column;
     flex-direction: column;
+    -webkit-justify-content: center;
     justify-content: center;
+    -webkit-flex-grow: 1;
     flex-grow: 1;
+    min-width: 0;
     overflow: hidden;
 }
 
@@ -100,124 +123,501 @@ html, body {
 
 .marquee-wrapper {
     display: inline-block;
-    will-change: transform; /* Hardware Acceleration */
+    -webkit-transform: translate3d(0px, 0, 0);
+    transform: translate3d(0px, 0, 0);
 }
 
 .marquee-text {
-    color: white;
+    color: #ffffff;
     font-size: 48px;
     font-weight: bold;
+    line-height: 65px;
     display: inline-block;
-    padding-right: 60px; /* same as gap in WPF */
+    padding-right: 60px;
 }
 
 .marquee-text-small {
     color: #DDDDDD;
     font-size: 30px;
+    line-height: 45px;
     display: inline-block;
-    padding-right: 60px; /* same as gap in WPF */
+    padding-right: 60px;
 }
 
-/* Portrait rule overrides */
-@media screen and (max-aspect-ratio: 3/4) {
+/* Portrait rule overrides (uses orientation: portrait so 4:3 iPads trigger reliably) */
+@media screen and (orientation: portrait) {
     #content-container {
+        -webkit-flex-direction: column;
         flex-direction: column;
+        -webkit-justify-content: center;
         justify-content: center;
+        -webkit-align-items: stretch;
         align-items: stretch;
-        top: 30px; /* Center layout in portrait */
-        bottom: auto;
-        height: calc(100% - 60px);
+        top: 30px;
+        bottom: 30px;
     }
 
     #album-art-border {
-        width: min(calc(100vw - 60px), calc(100vh - 200px));
-        height: min(calc(100vw - 60px), calc(100vh - 200px));
-        margin: 0 auto 20px auto;
+        /* Fallback before JS sizes exact square; avoids CSS min() unsupported in Safari 9 */
+        width: 72vw;
+        height: 72vw;
+        margin: 0 auto 24px auto;
         border-radius: 20px;
     }
 
     #text-container {
         margin-left: 0;
         text-align: left;
+        -webkit-flex-grow: 0;
         flex-grow: 0;
     }
-
-    .marquee-text, .marquee-text-small {
-         /* Remove padding on single un-scrolled items in portrait for true centering, JS handles scrolled state */
-    }
-}
-
-/* Scrolling animation classes added by JS */
-.scroll-animation {
-    animation: scroll-left var(--scroll-duration, 5s) linear infinite;
-    /* pause for 5s initially and before repeating - simulated loosely by CSS or handled tightly by JS if needed */
-}
-
-@keyframes scroll-left {
-    from { transform: translateX(0); }
-    to { transform: translateX(calc(-50%)); /* Assumes the wrapper is doubled in JS */ }
 }
 
 /* Login overlay */
 #login-overlay {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.92);
     z-index: 10;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
     flex-direction: column;
+    -webkit-justify-content: center;
     justify-content: center;
+    -webkit-align-items: center;
     align-items: center;
-    color: white;
-    display: flex; /* handled by JS mostly, but flex is safe in iOS 9 */
+    color: #ffffff;
+    padding: 24px;
+    box-sizing: border-box;
+    text-align: center;
 }
 
 #login-button {
     background-color: #1DB954;
-    color: white;
+    color: #ffffff;
     border: none;
     padding: 15px 30px;
     font-size: 18px;
     border-radius: 30px;
     cursor: pointer;
     font-weight: bold;
-    margin-top: 20px;
+    margin-top: 16px;
+    -webkit-appearance: none;
+    -webkit-transition: -webkit-transform 0.1s;
     transition: transform 0.1s;
 }
 
-#login-button:hover {
+#login-button:active {
     background-color: #1ed760;
-    transform: scale(1.05);
+    -webkit-transform: scale(0.97);
+    transform: scale(0.97);
+}
+
+#import-box {
+    margin-top: 28px;
+    width: 100%;
+    max-width: 460px;
+    padding-top: 20px;
+    border-top: 1px solid #333333;
+}
+
+.import-hint {
+    margin: 0 0 12px 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #aaaaaa;
+}
+
+.import-hint code {
+    color: #eaeaea;
+    background: #222222;
+    padding: 2px 5px;
+    border-radius: 4px;
+}
+
+#import-token-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid #444444;
+    background: #161616;
+    color: #ffffff;
+    -webkit-appearance: none;
+}
+
+#import-token-button {
+    margin-top: 10px;
+    background-color: #333333;
+    color: #ffffff;
+    border: 1px solid #555555;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 20px;
+    cursor: pointer;
+    -webkit-appearance: none;
 }
 
 /* Swipe transition overlay */
 #swipe-transition-overlay {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: black;
-    z-index: 5; /* Above content, below login overlay */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #000000;
+    z-index: 5;
     opacity: 0;
-    pointer-events: none; /* Let touches pass through */
-    transform: translateX(100%); /* start offscreen */
+    pointer-events: none;
+    -webkit-transform: translate3d(100%, 0, 0);
+    transform: translate3d(100%, 0, 0);
 }
 
 /* Status Popup */
 #status-popup {
-    position: absolute;
-    top: 50%; left: 50%;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
-    min-width: 150px; min-height: 150px;
+    min-width: 150px;
+    min-height: 150px;
     padding: 30px;
     box-sizing: border-box;
     background-color: rgba(255, 255, 255, 0.5);
     border-radius: 24px;
     z-index: 20;
+    display: -webkit-flex;
     display: flex;
+    -webkit-justify-content: center;
     justify-content: center;
+    -webkit-align-items: center;
     align-items: center;
     opacity: 0;
     pointer-events: none;
 }
+
 #status-popup svg {
-    width: 80px; height: 80px;
-    fill: #000;
+    width: 80px;
+    height: 80px;
+    fill: #000000;
+}
+
+#status-popup svg + svg {
+    margin-left: 10px;
+}
+
+/* ====== CLOCK MODE ====== */
+#clock-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+    display: none;
+    -webkit-justify-content: center;
+    justify-content: center;
+    -webkit-align-items: center;
+    align-items: center;
+    background-color: #000000;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.clock-face {
+    display: none;
+    width: 100%;
+    height: 100%;
+    -webkit-justify-content: center;
+    justify-content: center;
+    -webkit-align-items: center;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.clock-face.active {
+    display: -webkit-flex;
+    display: flex;
+}
+
+/* Style 0: Flip Clock */
+#clock-flip {
+    -webkit-flex-direction: row;
+    flex-direction: row;
+    padding: 4%;
+    box-sizing: border-box;
+}
+
+.flip-unit {
+    position: relative;
+    width: 44%;
+    height: 70%;
+    -webkit-perspective: 1000px;
+    perspective: 1000px;
+    font-weight: 800;
+    -webkit-flex-shrink: 0;
+    flex-shrink: 0;
+}
+
+#flip-hours {
+    margin-right: 4%;
+}
+
+.flip-card-top,
+.flip-card-bottom,
+.flip-leaf-top,
+.flip-leaf-bottom {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    overflow: hidden;
+    background-color: #262626;
+    color: #eaeaea;
+    box-sizing: border-box;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+.flip-card-top,
+.flip-leaf-top {
+    top: 0;
+    border-radius: 32px 32px 0 0;
+}
+
+.flip-card-bottom,
+.flip-leaf-bottom {
+    bottom: 0;
+    border-radius: 0 0 32px 32px;
+}
+
+/* Full-height digit span aligned identically across top and bottom halves (avoids Safari 9 flex+translateY clipping) */
+.flip-card-top span,
+.flip-leaf-top span,
+.flip-card-bottom span,
+.flip-leaf-bottom span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 200%;
+    text-align: center;
+    display: block;
+}
+
+.flip-card-top span,
+.flip-leaf-top span {
+    top: 0;
+}
+
+.flip-card-bottom span,
+.flip-leaf-bottom span {
+    top: -100%;
+}
+
+.flip-card-top,
+.flip-card-bottom {
+    z-index: 1;
+}
+
+.flip-leaf-top {
+    z-index: 3;
+    -webkit-transform-origin: 50% 100%;
+    transform-origin: 50% 100%;
+    visibility: hidden;
+}
+
+.flip-leaf-bottom {
+    z-index: 4;
+    -webkit-transform-origin: 50% 0%;
+    transform-origin: 50% 0%;
+    -webkit-transform: rotateX(90deg);
+    transform: rotateX(90deg);
+    visibility: hidden;
+}
+
+.flip-unit.flipping .flip-leaf-top {
+    visibility: visible;
+    -webkit-animation: flipTop 0.25s ease-in forwards;
+    animation: flipTop 0.25s ease-in forwards;
+}
+
+.flip-unit.flipping .flip-leaf-bottom {
+    visibility: visible;
+    -webkit-animation: flipBottom 0.25s ease-out 0.25s both;
+    animation: flipBottom 0.25s ease-out 0.25s both;
+}
+
+@-webkit-keyframes flipTop {
+    0% {
+        -webkit-transform: rotateX(0deg);
+        opacity: 1;
+    }
+    99% {
+        opacity: 1;
+    }
+    100% {
+        -webkit-transform: rotateX(-90deg);
+        opacity: 0;
+    }
+}
+
+@keyframes flipTop {
+    0% {
+        transform: rotateX(0deg);
+        opacity: 1;
+    }
+    99% {
+        opacity: 1;
+    }
+    100% {
+        transform: rotateX(-90deg);
+        opacity: 0;
+    }
+}
+
+@-webkit-keyframes flipBottom {
+    0% {
+        -webkit-transform: rotateX(90deg);
+        opacity: 0;
+    }
+    1% {
+        opacity: 1;
+    }
+    100% {
+        -webkit-transform: rotateX(0deg);
+        opacity: 1;
+    }
+}
+
+@keyframes flipBottom {
+    0% {
+        transform: rotateX(90deg);
+        opacity: 0;
+    }
+    1% {
+        opacity: 1;
+    }
+    100% {
+        transform: rotateX(0deg);
+        opacity: 1;
+    }
+}
+
+.flip-card-divider {
+    position: absolute;
+    top: 50%;
+    margin-top: -2px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background-color: #000000;
+    z-index: 5;
+}
+
+/* Style 1: Modern Rectangular Analog */
+#clock-analog {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+#analog-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.analog-tick {
+    stroke: #eaeaea;
+    stroke-linecap: round;
+}
+
+.analog-tick-minor {
+    opacity: 0.55;
+}
+
+.analog-tick-major {
+    opacity: 1;
+}
+
+#analog-hour-hand,
+#analog-minute-hand,
+#analog-second-hand {
+    stroke: #eaeaea;
+    stroke-linecap: round;
+}
+
+#analog-center-dot {
+    fill: #eaeaea;
+}
+
+/* Clock Portrait Overrides */
+@media screen and (orientation: portrait) {
+    #clock-flip {
+        -webkit-flex-direction: column;
+        flex-direction: column;
+    }
+
+    .flip-unit {
+        width: 78%;
+        height: 40%;
+    }
+
+    #flip-hours {
+        margin-right: 0;
+        margin-bottom: 5%;
+    }
+}
+
+/* Dim Red Night Mode */
+#clock-container.clock-dim-red {
+    background-color: #000000;
+}
+
+#clock-container.clock-dim-red .flip-card-top,
+#clock-container.clock-dim-red .flip-card-bottom,
+#clock-container.clock-dim-red .flip-leaf-top,
+#clock-container.clock-dim-red .flip-leaf-bottom {
+    background-color: #100000;
+    color: rgba(255, 42, 26, 0.5);
+    border: 1px solid rgba(255, 42, 26, 0.2);
+}
+
+#clock-container.clock-dim-red .flip-card-top,
+#clock-container.clock-dim-red .flip-leaf-top {
+    border-bottom: none;
+}
+
+#clock-container.clock-dim-red .flip-card-bottom,
+#clock-container.clock-dim-red .flip-leaf-bottom {
+    border-top: none;
+}
+
+#clock-container.clock-dim-red .flip-card-divider {
+    background-color: rgba(255, 42, 26, 0.28);
+    height: 2px;
+    margin-top: -1px;
+}
+
+#clock-container.clock-dim-red .analog-tick,
+#clock-container.clock-dim-red #analog-hour-hand,
+#clock-container.clock-dim-red #analog-minute-hand,
+#clock-container.clock-dim-red #analog-second-hand {
+    stroke: rgba(255, 42, 26, 0.5);
+}
+
+#clock-container.clock-dim-red #analog-center-dot {
+    fill: rgba(255, 42, 26, 0.5);
 }
